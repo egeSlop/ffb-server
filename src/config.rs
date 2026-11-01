@@ -49,7 +49,7 @@ impl Config {
         let c = |x: &mut f32| *x = if x.is_finite() { x.clamp(0.0, 1.0) } else { 0.0 };
         c(&mut self.master_gain);
         let f = &mut self.feel;
-        for x in [&mut f.centering, &mut f.centering_parked, &mut f.damping, &mut f.damping_engine_off, &mut f.bumps, &mut f.impacts, &mut f.texture, &mut f.engine] {
+        for x in [&mut f.centering, &mut f.centering_parked, &mut f.damping, &mut f.damping_engine_off, &mut f.bumps, &mut f.impacts, &mut f.texture, &mut f.engine, &mut f.soft_lock] {
             c(x);
         }
         self.stale_ms = self.stale_ms.clamp(50, 5000);

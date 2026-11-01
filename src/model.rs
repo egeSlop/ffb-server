@@ -37,6 +37,9 @@ pub struct Telemetry {
     pub v_fwd: Option<f32>,
     pub yaw_rate: Option<f32>,
     pub mass: Option<f32>,
+    /// How far the player turned past the in-game steering lock, in units of the lock
+    /// (0.1 = 10% further). Positive = the positive steering direction. Drives the soft lock.
+    pub lock_over: Option<f32>,
     pub wheels: Vec<WheelT>,
 }
 
@@ -56,6 +59,8 @@ pub struct Feel {
     pub impacts: f32,
     pub texture: f32,
     pub engine: f32,
+    /// Push-back past the in-game steering lock (needs lockOver from the game).
+    pub soft_lock: f32,
 }
 
 impl Default for Feel {
@@ -69,6 +74,7 @@ impl Default for Feel {
             impacts: 0.80,
             texture: 0.25,
             engine: 0.10,
+            soft_lock: 0.80,
         }
     }
 }
@@ -85,6 +91,16 @@ pub fn surface_props(s: &str) -> (f32, f32) {
         "ice" => (0.10, 0.20),
         "air" => (0.0, 0.0), // wheels off the ground
         _ => (0.35, 0.85),
+    }
+}
+
+/// Constant force for the soft lock, before the `invert` setting. Measured on a V987: a positive
+/// constant turns the wheel toward negative steering, so turning past the lock in the positive
+/// direction needs a positive push back.
+pub fn soft_lock_push(tel: &Telemetry, feel: &Feel) -> f32 {
+    match tel.lock_over {
+        Some(o) if o.is_finite() && o.abs() > 0.002 => o.signum() * feel.soft_lock * (0.35 + o.abs() * 4.0).min(1.0),
+        _ => 0.0,
     }
 }
 
@@ -250,6 +266,20 @@ mod tests {
         m2.compute(&tel(0.000, 8.0, "road", 0.00, 0.00), &f);
         let sym = m2.compute(&tel(0.016, 8.0, "road", 0.05, 0.05), &f);
         assert!(sym.constant.abs() < 0.01, "both wheels together shouldn't twist");
+    }
+
+    #[test]
+    fn soft_lock_pushes_back_toward_center() {
+        let f = Feel::default();
+        let mut t = tel(0.0, 5.0, "road", 0.0, 0.0);
+        assert_eq!(soft_lock_push(&t, &f), 0.0);
+        t.lock_over = Some(0.1);
+        let right = soft_lock_push(&t, &f);
+        t.lock_over = Some(-0.1);
+        let left = soft_lock_push(&t, &f);
+        assert!(right > 0.5 && left < -0.5 && (right + left).abs() < 1e-6);
+        t.lock_over = Some(3.0);
+        assert!(soft_lock_push(&t, &f) <= f.soft_lock + 1e-6);
     }
 
     #[test]

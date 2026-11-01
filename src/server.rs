@@ -579,7 +579,15 @@ fn engine(sh: Arc<Shared>) {
                             driving = true;
                         }
                         let (f, mode) = match &*fr {
-                            Frame::Telemetry(t) => (model.compute(t, &cfg.feel), "telemetry"),
+                            Frame::Telemetry(t) => {
+                                let mut f = model.compute(t, &cfg.feel);
+                                // Soft lock: computed for a non-inverted wheel, so undo `invert` here.
+                                let push = crate::model::soft_lock_push(t, &cfg.feel);
+                                if push != 0.0 {
+                                    f.constant = (f.constant + if cfg.invert { -push } else { push }).clamp(-1.0, 1.0);
+                                }
+                                (f, "telemetry")
+                            }
                             Frame::Forces(ff) => (direct(ff), "forces"),
                         };
                         out = Some((f, mode, Some(fr)));

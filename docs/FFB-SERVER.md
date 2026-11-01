@@ -78,6 +78,7 @@ as telemetry.
 | `vUp` | m/s, up | no | hard landings become a short kick |
 | `vLat` | m/s, left | no | reserved |
 | `yawRate` | rad/s | no | picks the direction of impact kicks |
+| `lockOver` | units of the lock | no | how far the player turned past the in-game steering lock: `0.1` is 10% further, positive in the positive steering direction. The server pushes back there (soft lock). Send `0` or leave it out when inside the lock |
 | `t` | seconds | no | your own clock. Leave it out and the server timestamps each message |
 | `game` | string | no | same as `hello.game`, for clients that can't send a hello |
 | `wheels` | list | yes | see below. An empty list still gives centering and weight |
@@ -233,6 +234,7 @@ bumps = 0.60
 impacts = 0.80
 texture = 0.25
 engine = 0.10
+soft_lock = 0.80           # push-back past the in-game lock (needs lockOver)
 ```
 
 ## Versioning
