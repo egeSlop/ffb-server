@@ -110,6 +110,11 @@ Surfaces set how rough the ground feels and how much grip is left for centering:
 
 Any other name counts as a firm, slightly rough surface.
 
+Other fields are allowed. The server doesn't use them for forces but repeats them in the
+`telemetry` of `/stream` frames, so a dashboard can show them. V987 Wheel Studio's tablet
+dashboard reads `gear`, `fuel`, `lightsLow`, `blinkerLeft` and similar names from there; the
+list is in its [DASH.md](https://github.com/egeSlop/v987-wheel-studio/blob/main/docs/DASH.md#fields).
+
 ### forces: send your own
 
 If your game already knows what the wheel should feel (it has its own force feedback maths, or

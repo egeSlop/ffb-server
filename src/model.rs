@@ -41,6 +41,10 @@ pub struct Telemetry {
     /// (0.1 = 10% further). Positive = the positive steering direction. Drives the soft lock.
     pub lock_over: Option<f32>,
     pub wheels: Vec<WheelT>,
+    /// Any other fields the game sends (gear, lights, fuel...). The server ignores them for
+    /// forces but repeats them on /stream, so dashboards can show them.
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, serde_json::Value>,
 }
 
 /// Tuning, all 0..1. Lives in the [feel] table of the server settings.
